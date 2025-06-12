@@ -1,7 +1,6 @@
 import os
 from .database import Base, engine, get_db, init_test_data, AsyncSessionLocal
 from . import crud, schemas, models
-from .crud import get_api_key
 from fastapi import APIRouter, Depends, FastAPI, File, HTTPException, status, UploadFile
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -12,14 +11,11 @@ from pathlib import Path
 import logging
 import coloredlogs
 
-# logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 coloredlogs.install(level='INFO', logger=logger)
 
 app = FastAPI()
 
-
-# static_dir = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")), "static")
 static_dir = Path(__file__).resolve().parent.parent / "static"
 MEDIA_ROOT = static_dir / "media"
 
@@ -59,7 +55,7 @@ async def startup():
 
 
 @api_router.get("/users/me", response_model=schemas.UserMeResponse)
-async def get_me(api_key: str = Depends(get_api_key), db: AsyncSession = Depends(get_db)):
+async def get_me(api_key: str = Depends(crud.get_api_key), db: AsyncSession = Depends(get_db)):
     user = await crud.get_user(db, api_key=api_key)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -69,7 +65,7 @@ async def get_me(api_key: str = Depends(get_api_key), db: AsyncSession = Depends
 @api_router.post("/tweets", response_model=schemas.CreatedTweet)
 async def create_tweet(
         tweet: schemas.TweetCreate,
-        api_key: str = Depends(get_api_key),
+        api_key: str = Depends(crud.get_api_key),
         db: AsyncSession = Depends(get_db)
 ):
 
@@ -110,8 +106,7 @@ async def upload_media(file: UploadFile = File(...), db: AsyncSession = Depends(
 
 
 @api_router.get("/tweets", response_model=schemas.TweetResponse)
-async def read_tweets(api_key: str = Depends(get_api_key), db: AsyncSession = Depends(get_db)):
-    # user = await crud.get_user_by_api_key(db, api_key)
+async def read_tweets(api_key: str = Depends(crud.get_api_key), db: AsyncSession = Depends(get_db)):
     user = await crud.get_user(db, api_key=api_key)
     if not user:
         raise HTTPException(
@@ -130,7 +125,7 @@ async def read_tweets(api_key: str = Depends(get_api_key), db: AsyncSession = De
 @api_router.delete("/tweets/{tweet_id}")
 async def delete_tweet(
         tweet_id: int,
-        api_key: str = Depends(get_api_key),
+        api_key: str = Depends(crud.get_api_key),
         db: AsyncSession = Depends(get_db)
 ):
     user = await crud.get_user(db, api_key=api_key)
@@ -182,7 +177,7 @@ async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
 @api_router.post("/tweets/{tweet_id}/likes")
 async def add_like(
         tweet_id: int,
-        api_key: str = Depends(get_api_key),
+        api_key: str = Depends(crud.get_api_key),
         db: AsyncSession = Depends(get_db)
 ):
     user = await crud.get_user(db, api_key=api_key)
@@ -205,7 +200,7 @@ async def add_like(
 @api_router.delete("/tweets/{tweet_id}/likes")
 async def unlike_tweet(
         tweet_id: int,
-        api_key: str = Depends(get_api_key),
+        api_key: str = Depends(crud.get_api_key),
         db: AsyncSession = Depends(get_db)
 ):
     user = await crud.get_user(db, api_key=api_key)
@@ -227,7 +222,7 @@ async def unlike_tweet(
 @api_router.post("/users/{followed_id}/follow")
 async def follow_user(
         followed_id: int,
-        api_key: str = Depends(get_api_key),
+        api_key: str = Depends(crud.get_api_key),
         db: AsyncSession = Depends(get_db)
 ):
     follower = await crud.get_user(db, api_key=api_key)
@@ -249,7 +244,7 @@ async def follow_user(
 @api_router.delete("/users/{followed_id}/follow")
 async def unfollow(
         followed_id: int,
-        api_key: str = Depends(get_api_key),
+        api_key: str = Depends(crud.get_api_key),
         db: AsyncSession = Depends(get_db)
 ):
     follower = await crud.get_user(db, api_key=api_key)

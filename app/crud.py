@@ -1,10 +1,8 @@
 from typing import List
-
 from fastapi import Header, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, delete
+from sqlalchemy import delete, select
 from sqlalchemy.orm import joinedload, selectinload
-
 from . import models, schemas
 
 import logging
