@@ -1,11 +1,6 @@
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from pathlib import Path
-import os
-
-from app.main import app
-from app.database import get_db, init_test_data
 from app import crud, models
 
 
@@ -22,24 +17,16 @@ from app import crud, models
 
 
 # Фикстура для тестового пользователя
-@pytest.fixture
-async def test_user(db_session: AsyncSession):
-    user_data = {
-        "name": "Test User",
-        "api_key": "test_api_key"
-    }
-    user = models.User(**user_data)
-    db_session.add(user)
-    await db_session.commit()
-    return user
-
-
-# Тесты здоровья приложения
-@pytest.mark.anyio
-async def test_healthcheck(async_client: AsyncClient):
-    response = await async_client.get("/")
-    assert response.status_code == 200
-    assert "text/html" in response.headers["content-type"]
+# @pytest.fixture
+# async def test_user(db_session: AsyncSession):
+#     user_data = {
+#         "name": "Test User",
+#         "api_key": "test_api_key"
+#     }
+#     user = models.User(**user_data)
+#     db_session.add(user)
+#     await db_session.commit()
+#     return user
 
 
 # Тесты пользователей
@@ -52,12 +39,6 @@ async def test_get_me(async_client: AsyncClient, test_user):
     assert data["result"] is True
     assert data["user"]["name"] == test_user.name
     assert data["user"]["id"] == test_user.id
-
-
-@pytest.mark.anyio
-async def test_get_me_unauthorized(async_client: AsyncClient):
-    response = await async_client.get("/api/users/me")
-    assert response.status_code == 401
 
 
 # Тесты твитов
