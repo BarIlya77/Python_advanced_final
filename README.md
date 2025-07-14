@@ -94,7 +94,7 @@ docker-compose up --build
 └── README.md
 ```
 
-## 🗂️ Тестирование <a id="testing"></a>
+## ⚙️ Тестирование <a id="testing"></a>
 
 Запуск тестов через Docker Compose:
 ```bash
