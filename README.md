@@ -10,6 +10,8 @@
 - [Технологии](#technologies)
 - [Установка](#installation)
 - [Запуск](#run)
+- [Структура проекта](#structure)
+- [Тестирование](#testing)
 
 ---
 
@@ -34,13 +36,13 @@
 - **Docker & Docker Compose** — контейнеризация
 - **Nginx** — обратный прокси
 - **Pydantic** — валидация данных
-- (В перспективе: **Alembic, JWT, pytest**)
+- **Pytest** — тестирование
 
   [//]: # (- **pytest** + **pytest-asyncio** — тестирование)
 
 ---
 
-## 🚀 Установка <a id="installation"></a>
+## 🏗️ Установка <a id="installation"></a>
 
 1. Клонировать репозиторий:
     ```bash
@@ -56,7 +58,7 @@
 
 ---
 
-## 🏗️ Запуск <a id="run"></a>
+## 🚀 Запуск <a id="run"></a>
 
 Собрать и запустить весь стек через Docker Compose:
 ```bash
@@ -68,20 +70,33 @@ docker-compose up --build
 ## 🗂️ Структура проекта <a id="structure"></a>
 
 ```
-├── app/                # Основной код приложения
-│ ├── main.py           # Точка входа в приложение
-│ ├── models.py         # SQLAlchemy модели
-│ ├── crud.py           # CRUD-операции
-│ ├── schemas.py        # Pydantic-схемы
-│ ├── database.py       # Подключение к БД
+├── app/                     # Основной код приложения
+│ ├── main.py                # Точка входа в приложение
+│ ├── models.py              # SQLAlchemy модели
+│ ├── crud.py                # CRUD-операции
+│ ├── schemas.py             # Pydantic-схемы
+│ ├── database.py            # Подключение к БД
 │ └── init.py
-├── Dockerfile          # Сборка FastAPI-приложения
-├── docker-compose.yml  # Контейнеры: app, db, nginx
+├── Dockerfile               # Сборка FastAPI-приложения
+├── docker-compose.yml       # Контейнеры: app, db, nginx
+├── docker-compose.test.yml  # Контейнер для запуска тестов
 ├── nginx/
-│ └── default.conf      # Конфигурация обратного прокси
-├── static/             # Папка для статики
-├── .env                # Переменные окружения
-├── .env.example        # Пример env-файла
-├── requirements.txt    # Зависимости
+│ └── default.conf           # Конфигурация обратного прокси
+├── tests/                   # Тесты
+│ ├── conftest.py            # Конфигурация и фикстуры
+│ ├── test_healthcheck.py    # Тест запуска приложения
+│ ├── test_main.py           # Unit-тесты
+│ └── init.py
+├── static/                  # Папка для статики
+├── .env                     # Переменные окружения
+├── .env.example             # Пример env-файла
+├── requirements.txt         # Зависимости
 └── README.md
+```
+
+## 🗂️ Тестирование <a id="testing"></a>
+
+Запуск тестов через Docker Compose:
+```bash
+docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit
 ```
