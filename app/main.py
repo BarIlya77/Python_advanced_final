@@ -39,6 +39,8 @@ api_router = APIRouter(prefix="/api")
 
 @app.on_event("startup")
 async def startup():
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
 
     async with engine.begin() as conn:
         # await conn.run_sync(Base.metadata.drop_all)
@@ -53,7 +55,7 @@ async def startup():
     else:
         logger.info("БД уже инициализирована, пропускаем создание таблиц")
 
-
+# app = FastAPI(lifespan=lifespan)
 @api_router.get("/users/me", response_model=schemas.UserMeResponse)
 async def get_me(api_key: str = Depends(crud.get_api_key), db: AsyncSession = Depends(get_db)):
     user = await crud.get_user(db, api_key=api_key)
