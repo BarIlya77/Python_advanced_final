@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 from .database import Base, engine, get_db, init_test_data, AsyncSessionLocal
 from . import crud, schemas, models
 from fastapi import APIRouter, Depends, FastAPI, File, HTTPException, status, UploadFile
@@ -14,7 +15,25 @@ import coloredlogs
 logger = logging.getLogger(__name__)
 coloredlogs.install(level='INFO', logger=logger)
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with engine.begin() as conn:
+        # await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
+    if os.getenv("ENV") == "development":
+        logger.info("Заполнение тестовыми данными")
+        async with AsyncSessionLocal() as session:
+            await init_test_data(session)
+        logger.info("Инициализация БД завершена")
+    else:
+        logger.info("БД уже инициализирована, пропускаем создание таблиц")
+    yield
+
+    await engine.dispose()
+
+
+app = FastAPI(lifespan=lifespan)
 
 static_dir = Path(__file__).resolve().parent.parent / "static"
 MEDIA_ROOT = static_dir / "media"
@@ -33,29 +52,9 @@ async def read_root():
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 app.mount("/js", StaticFiles(directory=os.path.join(static_dir, "js")), name="js")
 app.mount("/css", StaticFiles(directory=os.path.join(static_dir, "css")), name="css")
-
 api_router = APIRouter(prefix="/api")
 
 
-@app.on_event("startup")
-async def startup():
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-
-    async with engine.begin() as conn:
-        # await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
-
-    if os.getenv("ENV") == "development":
-        logger.info("Заполнение тестовыми данными")
-        async with AsyncSessionLocal() as session:
-            await init_test_data(session)
-
-        logger.info("Инициализация БД завершена")
-    else:
-        logger.info("БД уже инициализирована, пропускаем создание таблиц")
-
-# app = FastAPI(lifespan=lifespan)
 @api_router.get("/users/me", response_model=schemas.UserMeResponse)
 async def get_me(api_key: str = Depends(crud.get_api_key), db: AsyncSession = Depends(get_db)):
     user = await crud.get_user(db, api_key=api_key)
